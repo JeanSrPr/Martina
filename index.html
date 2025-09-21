@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ramo de girasoles (espaciado limpio)</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#bfe7ff; --sky-btm:#fff9c8; --sun:#ffe36a;
+    --grass1:#7bc96f; --grass2:#5fb55a;
+    --stem1:#2f8a52;  --stem2:#1f6b3f;
+    --leaf1:#43b56f;  --leaf2:#2f8a52;
+    --petal1:#ffd818; --petal2:#ffc600;
+    --center:#6b2b14;
+    --mini1:#ff7eb6; --mini2:#ffaad0;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{
+    margin:0; display:grid; place-items:center; padding:18px;
+    background: radial-gradient(1400px 700px at 70% 10%, var(--sky-top), var(--sky-btm));
+    font-family:Poppins,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:#2b2b2b;
+  }
+  .stage{
+    width:min(980px, 95vw); aspect-ratio:16/9; position:relative;
+    background:#ffffffb5; backdrop-filter: blur(6px);
+    border:1px solid #f0e7b4; border-radius:22px; overflow:hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,.14);
+  }
+
+  .caption{
+    position:absolute; left:16px; right:16px; bottom:12px;
+    display:flex; justify-content:flex-start; gap:10px; flex-wrap:wrap;
+    font-size:clamp(.85rem, 2vw, 1rem); color:#4b4b4b;
+    pointer-events:none;
+  }
+
+  .controls{
+    margin-top:14px;
+    display:flex; justify-content:center; gap:12px; flex-wrap:wrap;
+  }
+  .btn{
+    border:none;border-radius:12px;padding:.6rem .9rem;
+    font-weight:600;cursor:pointer;background:#fff;
+    border:1px solid #eee4a8;color:#6b5a00
+  }
+  .btn:hover{background:#fff7c9}
+
+  .messageBox{
+    margin-top:16px;
+    padding:12px 16px;
+    border:2px dashed #e6c94d;
+    border-radius:12px;
+    background:#fffef5;
+    max-width:min(980px,95vw);
+    width:100%;
+    text-align:center;
+    color:#4b3d00;
+    font-weight:600;
+  }
+
+  @keyframes cloudDrift { 0%{ transform:translateX(-10%) } 100%{ transform:translateX(110%) } }
+  @keyframes birdsFly   { 0%{ transform:translateX(-15%) } 100%{ transform:translateX(115%) } }
+  @keyframes petalsSpin { to{ transform:rotate(360deg) } }
+  @keyframes floatY     { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-6px) } }
+
+  .sf-base{
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transform: translateY(0) scaleY(0.05);
+    animation: none;
+  }
+  .stage.start .sf-base{ animation: grow 1.6s cubic-bezier(.17,.84,.44,1) forwards var(--delay,0s); }
+  @keyframes grow{
+    0%   { transform: translateY(0) scaleY(0.05) }
+    70%  { transform: translateY(-6px) scaleY(1.03) }
+    100% { transform: translateY(0) scaleY(1) }
+  }
+
+  .head{ transform: translateY(0); }
+  .stage.start .head{ animation: headUp 1.5s cubic-bezier(.17,.84,.44,1) forwards var(--delay,0s); }
+  @keyframes headUp{
+    0%   { transform: translateY(0) }
+    70%  { transform: translateY(-490px) }
+    100% { transform: translateY(-410px) }
+  }
+  .headFloat{ animation: floatY 6s ease-in-out infinite; }
+
+  @keyframes miniFade { 0%,10%{opacity:0} 20%,80%{opacity:1} 90%,100%{opacity:0} }
+  .mini-anim { animation: miniFade 7s ease-in-out infinite; }
+
+  .stage.paused .anim,
+  .stage.paused .sf-base,
+  .stage.paused .head,
+  .stage.paused .headFloat,
+  .stage.paused .mini-anim{ animation-play-state: paused; }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <!-- AÑADIDO: xmlns y xmlns:xlink -->
+    <svg xmlns="http://www.w3.org/2000/svg"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         viewBox="0 0 1600 900" width="100%" height="100%"
+         aria-label="Ramo de girasoles con flores pequeñas">
+      <defs>
+        <linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stop-color="var(--sky-top)"/>
+          <stop offset="100%" stop-color="var(--sky-btm)"/>
+        </linearGradient>
+        <radialGradient id="g-sun" cx="50%" cy="20%" r="20%">
+          <stop offset="0%" stop-color="var(--sun)" stop-opacity="1"/>
+          <stop offset="75%" stop-color="var(--sun)" stop-opacity=".35"/>
+          <stop offset="100%" stop-color="var(--sun)" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="g-stem" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--stem1)"/>
+          <stop offset="100%" stop-color="var(--stem2)"/>
+        </linearGradient>
+        <linearGradient id="g-leaf" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="var(--leaf1)"/>
+          <stop offset="100%" stop-color="var(--leaf2)"/>
+        </linearGradient>
+        <linearGradient id="g-petal" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--petal1)"/>
+          <stop offset="100%" stop-color="var(--petal2)"/>
+        </linearGradient>
+        <radialGradient id="g-center" cx="40%" cy="40%" r="60%">
+          <stop offset="0%" stop-color="#a54d33"/>
+          <stop offset="100%" stop-color="var(--center)"/>
+        </radialGradient>
+        <filter id="f-soft"><feGaussianBlur stdDeviation="2.5"/></filter>
+        <filter id="f-shadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000" flood-opacity=".18"/>
+        </filter>
+
+        <path id="leafPath" d="M0,0 C60,-20 120,10 150,55 C120,95 60,120 5,85 C-10,65 -5,25 0,0 Z"/>
+        <path id="petalPath" d="M0,-110 C26,-110 52,-90 52,-63 C52,-36 26,-14 0,0 C-26,-14 -52,-36 -52,-63 C-52,-90 -26,-110 0,-110 Z"/>
+
+        <g id="sunflowerBase">
+          <path d="M0,0 C 8,-50 12,-130 6,-210 C 0,-270 -4,-330 2,-360"
+                stroke="url(#g-stem)" stroke-width="12" fill="none" stroke-linecap="round" filter="url(#f-shadow)"/>
+          <g filter="url(#f-shadow)">
+            <use href="#leafPath" fill="url(#g-leaf)" transform="translate(-10,-240) rotate(-22) scale(0.9)"/>
+            <use href="#leafPath" fill="url(#g-leaf)" transform="translate(-1,-240) rotate(165) scale(0.85)"/>
+          </g>
+        </g>
+
+        <g id="sunflowerHead" filter="url(#f-shadow)">
+          <g class="anim" style="animation:petalsSpin 22s linear infinite">
+            <g fill="url(#g-petal)">
+              <use href="#petalPath" transform="rotate(0)"/>
+              <use href="#petalPath" transform="rotate(30)"/>
+              <use href="#petalPath" transform="rotate(60)"/>
+              <use href="#petalPath" transform="rotate(90)"/>
+              <use href="#petalPath" transform="rotate(120)"/>
+              <use href="#petalPath" transform="rotate(150)"/>
+              <use href="#petalPath" transform="rotate(180)"/>
+              <use href="#petalPath" transform="rotate(210)"/>
+              <use href="#petalPath" transform="rotate(240)"/>
+              <use href="#petalPath" transform="rotate(270)"/>
+              <use href="#petalPath" transform="rotate(300)"/>
+              <use href="#petalPath" transform="rotate(330)"/>
+            </g>
+          </g>
+          <circle r="64" fill="url(#g-center)" stroke="#e6b37f55" stroke-width="3"/>
+        </g>
+
+        <g id="miniFlower">
+          <path d="M0,0 C4,-30 6,-70 2,-105" stroke="url(#g-stem)" stroke-width="7" fill="none" stroke-linecap="round"/>
+          <use href="#leafPath" fill="url(#g-leaf)" transform="translate(-12,-60) rotate(-18) scale(.45)"/>
+          <g transform="translate(0,-115)">
+            <g fill="url(#g-petal)">
+              <use href="#petalPath" transform="scale(.55) rotate(0)"/>
+              <use href="#petalPath" transform="scale(.55) rotate(45)"/>
+              <use href="#petalPath" transform="scale(.55) rotate(90)"/>
+              <use href="#petalPath" transform="scale(.55) rotate(135)"/>
+              <use href="#petalPath" transform="scale(.55) rotate(180)"/>
+              <use href="#petalPath" transform="scale(.55) rotate(225)"/>
+              <use href="#petalPath" transform="scale(.55) rotate(270)"/>
+              <use href="#petalPath" transform="scale(.55) rotate(315)"/>
+            </g>
+            <circle r="20" fill="var(--mini1)" stroke="var(--mini2)" stroke-width="3"/>
+          </g>
+        </g>
+      </defs>
+
+      <rect x="0" y="0" width="1600" height="900" fill="url(#g-sky)"/>
+      <circle cx="1250" cy="120" r="220" fill="url(#g-sun)"/>
+
+      <g opacity=".85" filter="url(#f-soft)">
+        <g class="anim" style="animation:cloudDrift 60s linear infinite">
+          <ellipse cx="250" cy="150" rx="120" ry="50" fill="#ffffffc8"/>
+          <ellipse cx="330" cy="140" rx="90" ry="45"  fill="#ffffffd0"/>
+          <ellipse cx="390" cy="160" rx="110" ry="48" fill="#ffffffc0"/>
+        </g>
+        <g class="anim" style="animation:cloudDrift 90s linear infinite; animation-delay:-25s">
+          <ellipse cx="950" cy="120" rx="120" ry="48" fill="#ffffffcc"/>
+          <ellipse cx="1020" cy="110" rx="80"  ry="38" fill="#ffffffd0"/>
+        </g>
+      </g>
+
+      <g class="anim" style="animation:birdsFly 35s linear infinite; transform:translateX(-15%)" fill="none" stroke="#3f3f3f" stroke-width="4" stroke-linecap="round" opacity=".65">
+        <path d="M0,260 q25,-18 50,0 q25,18 50,0" />
+        <path d="M-140,300 q22,-16 44,0 q22,16 44,0" />
+        <path d="M-300,220 q28,-20 56,0 q28,20 56,0" />
+      </g>
+
+      <rect x="0" y="760" width="1600" height="180" fill="var(--grass1)"/>
+      <g stroke="var(--grass2)" stroke-width="6" stroke-linecap="round" opacity=".6">
+        <path d="M40 900 L40 780 M80 900 L80 785 M120 900 L120 775 M160 900 L160 790 M200 900 L200 780
+                 M240 900 L240 790 M280 900 L280 775 M320 900 L320 785 M360 900 L360 790 M400 900 L400 780
+                 M440 900 L440 785 M480 900 L480 770 M520 900 L520 790 M560 900 L560 780 M600 900 L600 785
+                 M640 900 L640 770 M680 900 L680 790 M720 900 L720 785 M760 900 L760 780 M800 900 L800 790
+                 M840 900 L840 780 M880 900 L880 785 M920 900 L920 770 M960 900 L960 790 M1000 900 L1000 780
+                 M1040 900 L1040 785 M1080 900 L1080 770 M1120 900 L1120 790 M1160 900 L1160 785 M1200 900 L1200 780
+                 M1240 900 L1240 790 M1280 900 L1280 775 M1320 900 L1320 785 M1360 900 L1360 790 M1400 900 L1400 780
+                 M1440 900 L1440 785 M1480 900 L1480 770 M1520 900 L1520 790" />
+      </g>
+
+      <g transform="translate(300,880)">
+        <g class="sf-base" style="--delay:.00s"><use href="#sunflowerBase" transform="translate(160,-6) scale(0.96)"/></g>
+        <g class="sf-base" style="--delay:.10s"><use href="#sunflowerBase" transform="translate(300,-3) scale(0.98)"/></g>
+        <g class="sf-base" style="--delay:.20s"><use href="#sunflowerBase" transform="translate(440, 0) scale(1.02)"/></g>
+        <g class="sf-base" style="--delay:.30s"><use href="#sunflowerBase" transform="translate(580,-3) scale(0.98)"/></g>
+        <g class="sf-base" style="--delay:.40s"><use href="#sunflowerBase" transform="translate(720,-6) scale(0.96)"/></g>
+
+        <g transform="translate(165,0) scale(0.90) rotate(-4)"><g class="head headFloat" style="--delay:.00s"><use href="#sunflowerHead"/></g></g>
+        <g transform="translate(300,0) scale(1.05) rotate(-1)"><g class="head headFloat" style="--delay:.10s"><use href="#sunflowerHead"/></g></g>
+        <g transform="translate(580,0) scale(1.05) rotate( 1)"><g class="head headFloat" style="--delay:.30s"><use href="#sunflowerHead"/></g></g>
+        <g transform="translate(720,0) scale(0.90) rotate( 4)"><g class="head headFloat" style="--delay:.40s"><use href="#sunflowerHead"/></g></g>
+        <g transform="translate(440,0) scale(1.22) rotate(0)"><g class="head headFloat" style="--delay:.20s"><use href="#sunflowerHead"/></g></g>
+      </g>
+
+      <g id="miniFlowersScatter"></g>
+    </svg>
+
+    <div class="caption">
+      <div><strong>Para:</strong> Rosa ✨</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="start">Iniciar / Reiniciar</button>
+    <button class="btn" id="toggle">Pausar</button>
+    <button class="btn" id="fullscreen">Pantalla completa</button>
+    <button class="btn" id="exitFullscreen">Salir Pantalla completa</button>
+  </div>
+
+  <div class="messageBox" id="customMessage">
+    💛 El amarillo es el color de la luz, la alegría y los nuevos comienzos. Por eso quise regalarte un rayo de sol que nunca se apague: un jardín eterno solo para ti.
+
+Estas flores virtuales son mi manera de decir que, aunque nuestro camino recién inicia, mi intención de alegrar tu día es tan real como la sonrisa que espero provocar.
+
+Espero que te guste este pequeño parque de luz y código. ¡Feliz día!💛
+  </div>
+
+<script>
+  const stage  = document.getElementById('stage');
+  const start  = document.getElementById('start');
+  const toggle = document.getElementById('toggle');
+  const full   = document.getElementById('fullscreen');
+  const exitFs = document.getElementById('exitFullscreen');
+
+  function scatterMiniFlowers() {
+    const host = document.getElementById('miniFlowersScatter');
+    host.innerHTML = '';
+
+    const areaX = 42, areaY = 790, areaW = 1520, areaH = 110;
+
+    const numFlowers = 234;
+    const minDist    = 64;
+    const maxTries   = 2000;
+    const pts = [];
+
+    let tries = 0;
+    while (pts.length < numFlowers && tries < maxTries) {
+      tries++;
+      const x = areaX + Math.random() * areaW;
+      const y = areaY + Math.random() * areaH;
+      if (y < areaY + 6) continue;
+
+      let ok = true;
+      for (const p of pts) {
+        const dx = p.x - x, dy = p.y - y;
+        if (dx*dx + dy*dy < (minDist*minDist)) { ok = false; break; }
+      }
+      if (!ok) continue;
+
+      const s = 0.18 + Math.random() * 0.16;
+      pts.push({x, y, s});
+    }
+
+    const svgNS   = 'http://www.w3.org/2000/svg';
+    const xlinkNS = 'http://www.w3.org/1999/xlink';
+
+    const frag = document.createDocumentFragment();
+    pts.forEach((p) => {
+      const g = document.createElementNS(svgNS,'g');
+      g.setAttribute('transform', `translate(${p.x},${p.y}) scale(${p.s})`);
+      g.setAttribute('class', 'mini-anim');
+      g.setAttribute('style', `animation-delay:${(Math.random()*3).toFixed(2)}s`);
+
+      // CORREGIDO: crear <use> en namespace SVG y setear href modernos + fallback xlink
+      const use = document.createElementNS(svgNS,'use');
+      use.setAttribute('href','#miniFlower');                          // SVG2
+      use.setAttributeNS(xlinkNS,'xlink:href','#miniFlower');          // fallback
+      use.setAttribute('class','sf-base');
+
+      g.appendChild(use);
+      frag.appendChild(g);
+    });
+    host.appendChild(frag);
+  }
+
+  start.addEventListener('click', () => {
+    stage.classList.remove('start');
+    void stage.offsetWidth;
+    stage.classList.add('start');
+    scatterMiniFlowers();
+  });
+
+  let paused = false;
+  toggle.addEventListener('click', () => {
+    paused = !paused;
+    stage.classList.toggle('paused', paused);
+    toggle.textContent = paused ? 'Reanudar' : 'Pausar';
+  });
+
+  full.addEventListener('click', () => stage.requestFullscreen?.());
+  exitFs.addEventListener('click', () => document.exitFullscreen?.());
+
+  window.addEventListener('load', () => {
+    stage.classList.add('start');
+    scatterMiniFlowers();
+    setInterval(scatterMiniFlowers, 8000);
+  });
+</script>
+</body>
+</html>
